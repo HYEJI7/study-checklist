@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3인 스터디 체크리스트</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h1>3인 스터디 주간 체크리스트</h1>
+        <div class="sub">
+          월간 목표 → 주간 목표 → 매일 O/X 체크 → 달성률 자동계산
+        </div>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>월간 목표</h2>
+        <span class="muted" id="currentUserLabel"></span>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>이번 달 목표 입력</label>
+
+          <textarea id="monthGoalInput"
+            placeholder="예: 영어 루틴 만들기&#10;운동 주 4회 하기"></textarea>
+
+          <div style="margin-top:10px;">
+            <button class="primary" onclick="saveMonthGoal()">
+              월간 목표 저장
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label>저장된 월간 목표</label>
+          <div class="month-goal" id="monthGoalView">
+            아직 입력된 목표가 없어요.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>주간 설정</h2>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>시작일</label>
+          <input type="date" id="weekStart" />
+        </div>
+
+        <div class="field">
+          <label>종료일</label>
+          <input type="date" id="weekEnd" />
+        </div>
+
+        <button class="light" onclick="applyWeek()">기간 적용</button>
+      </div>
+
+      <p class="muted">
+        기간:
+        <b id="weekText"></b>
+        | 체크 입력: 빈칸 → O → X → 빈칸 순서
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>주간 목표 추가</h2>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>카테고리</label>
+          <input id="categoryInput" placeholder="예: 운동, 언어, 독서" />
+        </div>
+
+        <div class="field">
+          <label>목표/습관</label>
+          <input id="goalInput" placeholder="예: 헬스, 헤이링" />
+        </div>
+
+        <div class="field">
+          <label>주 목표 횟수</label>
+          <input id="targetInput" type="number" value="3" />
+        </div>
+
+        <button class="primary" onclick="addGoal()">추가</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2 id="tableTitle">체크리스트</h2>
+
+        <button class="danger" onclick="resetCurrentUser()">
+          현재 친구 데이터 초기화
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              <th>목표/습관</th>
+              <th>월</th>
+              <th>화</th>
+              <th>수</th>
+              <th>목</th>
+              <th>금</th>
+              <th>토</th>
+              <th>일</th>
+              <th>합계</th>
+              <th>주 목표</th>
+              <th>달성률</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+
+          <tbody id="goalBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

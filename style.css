@@ -1,0 +1,185 @@
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:"Pretendard","Malgun Gothic",sans-serif;
+  background:#f5f7fb;
+  color:#222;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px 18px 60px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+h1{
+  margin:0;
+  font-size:28px;
+}
+
+.sub{
+  margin-top:6px;
+  color:#667085;
+  font-size:14px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e4e7ec;
+  border-radius:18px;
+  box-shadow:0 8px 20px rgba(16,24,40,.06);
+  padding:18px;
+  margin-bottom:16px;
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+}
+
+.tab,
+button{
+  border:0;
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.tab{
+  background:#e9eef8;
+}
+
+.tab.active{
+  background:#2563eb;
+  color:white;
+}
+
+button.primary{
+  background:#2563eb;
+  color:white;
+}
+
+button.light{
+  background:#f2f4f7;
+}
+
+button.danger{
+  background:#fee4e2;
+  color:#b42318;
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+label{
+  display:block;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:700;
+}
+
+input,
+textarea{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid #d0d5dd;
+  border-radius:12px;
+}
+
+textarea{
+  min-height:86px;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  align-items:end;
+  flex-wrap:wrap;
+}
+
+.field{
+  flex:1;
+  min-width:160px;
+}
+
+.month-goal{
+  background:#f8fafc;
+  border-radius:14px;
+  padding:14px;
+  min-height:70px;
+  white-space:pre-wrap;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:940px;
+}
+
+th,
+td{
+  border:1px solid #d9dde5;
+  padding:9px;
+  text-align:center;
+}
+
+th{
+  background:#f2f4f7;
+}
+
+.left{
+  text-align:left;
+}
+
+.check{
+  cursor:pointer;
+  font-weight:900;
+}
+
+.ok{
+  background:#c6f6d5;
+}
+
+.no{
+  background:#ffd6ba;
+}
+
+.rate-good{
+  background:#d1e9ff;
+}
+
+.rate-bad{
+  background:#ffead5;
+}
+
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.muted{
+  color:#667085;
+  font-size:13px;
+}
