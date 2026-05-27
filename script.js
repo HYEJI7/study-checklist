@@ -1,76 +1,77 @@
 
-const STORAGE_KEY = "study-checklist-v2";
+const SUPABASE_URL = "https://ytlgamkgqsmswsbawndp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_CadAafBrDt9m4E4umtZY3Q_QBgg1E0N";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const users = ["혜지", "도윤", "선영"];
+const users = ["혜지", "민영", "지은"];
+const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
-const days = ["mon","tue","wed","thu","fri","sat","sun"];
+let currentUser = users[0];
+let goals = [];
+let monthGoals = {};
 
-let state = loadState();
+document.addEventListener("DOMContentLoaded", async () => {
+  renderTabs();
+  await loadAll();
+  listenRealtime();
+});
 
-let currentUser = state.currentUser || users[0];
-
-function defaultState(){
-
-  const data = {};
-
-  users.forEach(user=>{
-    data[user] = {
-      monthGoal:"",
-      goals:[]
-    };
-  });
-
-  return {
-    currentUser:users[0],
-    weekStart:"",
-    weekEnd:"",
-    data
-  };
+async function loadAll() {
+  await loadGoals();
+  await loadMonthGoals();
+  render();
 }
 
-function loadState(){
+async function loadGoals() {
+  const { data, error } = await db
+    .from("study_goals")
+    .select("*")
+    .order("id", { ascending: true });
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-
-  if(!saved){
-    return defaultState();
+  if (error) {
+    alert("목표 불러오기 실패: " + error.message);
+    return;
   }
 
-  return JSON.parse(saved);
+  goals = data || [];
 }
 
-function saveState(){
+async function loadMonthGoals() {
+  const { data, error } = await db
+    .from("month_goals")
+    .select("*");
 
-  state.currentUser = currentUser;
+  if (error) {
+    console.warn("월간 목표 테이블이 아직 없을 수 있어요:", error.message);
+    monthGoals = {};
+    return;
+  }
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(state)
-  );
+  monthGoals = {};
+  (data || []).forEach(row => {
+    monthGoals[row.user_name] = row.goal_text || "";
+  });
 }
 
-function renderTabs(){
+function listenRealtime() {
+  db.channel("study-checklist-change")
+    .on("postgres_changes", { event: "*", schema: "public", table: "study_goals" }, loadAll)
+    .on("postgres_changes", { event: "*", schema: "public", table: "month_goals" }, loadAll)
+    .subscribe();
+}
 
+function renderTabs() {
   const tabs = document.getElementById("tabs");
-
   tabs.innerHTML = "";
 
-  users.forEach(user=>{
-
+  users.forEach(user => {
     const btn = document.createElement("button");
-
-    btn.className =
-      "tab" +
-      (user === currentUser ? " active" : "");
-
+    btn.className = "tab" + (user === currentUser ? " active" : "");
     btn.textContent = user;
 
-    btn.onclick = ()=>{
-
+    btn.onclick = () => {
       currentUser = user;
-
-      saveState();
-
+      renderTabs();
       render();
     };
 
@@ -78,190 +79,152 @@ function renderTabs(){
   });
 }
 
-function render(){
+function render() {
+  document.getElementById("currentUserLabel").textContent = currentUser;
+  document.getElementById("tableTitle").textContent = currentUser + " 체크리스트";
 
-  renderTabs();
-
-  const userData = state.data[currentUser];
-
-  document.getElementById("currentUserLabel").textContent =
-    currentUser;
-
-  document.getElementById("monthGoalInput").value =
-    userData.monthGoal;
-
+  const goalText = monthGoals[currentUser] || "";
+  document.getElementById("monthGoalInput").value = goalText;
   document.getElementById("monthGoalView").textContent =
-    userData.monthGoal || "아직 입력된 목표가 없어요.";
+    goalText || "아직 입력된 목표가 없어요.";
 
-  document.getElementById("goalBody").innerHTML = "";
+  const userGoals = goals.filter(goal => goal.user_name === currentUser);
+  const body = document.getElementById("goalBody");
+  body.innerHTML = "";
 
-  if(userData.goals.length === 0){
-
-    document.getElementById("goalBody").innerHTML =
-      '<tr><td colspan="13">목표를 추가해줘!</td></tr>';
-
+  if (userGoals.length === 0) {
+    body.innerHTML = '<tr><td colspan="13" class="muted">목표를 추가해줘!</td></tr>';
     return;
   }
 
-  userData.goals.forEach((goal,index)=>{
-
-    const total =
-      days.filter(day=>goal.checks[day] === "O").length;
-
-    const rate =
-      Math.min(
-        Math.round((total / goal.target) * 100),
-        100
-      );
+  userGoals.forEach(goal => {
+    const total = days.filter(day => goal[day] === "O").length;
+    const target = Number(goal.target_count || 0);
+    const rate = target > 0 ? Math.min(Math.round((total / target) * 100), 100) : 0;
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td class="left">${goal.category}</td>
-      <td class="left">${goal.name}</td>
-
-      ${days.map(day=>{
-
-        const value = goal.checks[day] || "";
-
-        let cls = "";
-
-        if(value === "O") cls = "ok";
-        if(value === "X") cls = "no";
-
-        return `
-          <td
-            class="check ${cls}"
-            onclick="toggleCheck(${index}, '${day}')">
-            ${value}
-          </td>
-        `;
+      <td class="left">${escapeHtml(goal.category || "")}</td>
+      <td class="left">${escapeHtml(goal.goal_name || "")}</td>
+      ${days.map(day => {
+        const value = goal[day] || "";
+        const cls = value === "O" ? "ok" : value === "X" ? "no" : "";
+        return `<td class="check ${cls}" onclick="toggleCheck(${goal.id}, '${day}')">${value}</td>`;
       }).join("")}
-
       <td>${total}</td>
-      <td>${goal.target}</td>
-
-      <td class="${rate >= 80 ? "rate-good" : "rate-bad"}">
-        ${rate}%
-      </td>
-
-      <td>
-        <button class="danger"
-          onclick="deleteGoal(${index})">
-          삭제
-        </button>
-      </td>
+      <td>${target}</td>
+      <td class="${rate >= 80 ? "rate-good" : "rate-bad"}">${rate}%</td>
+      <td><button class="danger" onclick="deleteGoal(${goal.id})">삭제</button></td>
     `;
 
-    document.getElementById("goalBody").appendChild(tr);
+    body.appendChild(tr);
   });
 }
 
-function saveMonthGoal(){
+async function saveMonthGoal() {
+  const text = document.getElementById("monthGoalInput").value.trim();
 
-  state.data[currentUser].monthGoal =
-    document.getElementById("monthGoalInput").value;
+  const { error } = await db
+    .from("month_goals")
+    .upsert({
+      user_name: currentUser,
+      goal_text: text
+    }, {
+      onConflict: "user_name"
+    });
 
-  saveState();
-
-  render();
-}
-
-function applyWeek(){
-
-  state.weekStart =
-    document.getElementById("weekStart").value;
-
-  state.weekEnd =
-    document.getElementById("weekEnd").value;
-
-  saveState();
-
-  render();
-}
-
-function addGoal(){
-
-  const category =
-    document.getElementById("categoryInput").value;
-
-  const name =
-    document.getElementById("goalInput").value;
-
-  const target =
-    Number(document.getElementById("targetInput").value);
-
-  if(!category || !name || !target){
-
-    alert("값을 입력해줘!");
-
+  if (error) {
+    alert("월간 목표 저장 실패: " + error.message);
     return;
   }
 
-  state.data[currentUser].goals.push({
-    category,
-    name,
-    target,
-    checks:{
-      mon:"",
-      tue:"",
-      wed:"",
-      thu:"",
-      fri:"",
-      sat:"",
-      sun:""
-    }
-  });
+  await loadAll();
+}
 
-  saveState();
+async function addGoal() {
+  const category = document.getElementById("categoryInput").value.trim();
+  const goalName = document.getElementById("goalInput").value.trim();
+  const target = Number(document.getElementById("targetInput").value);
 
-  render();
+  if (!category || !goalName || !target) {
+    alert("카테고리, 목표/습관, 주 목표 횟수를 입력해줘!");
+    return;
+  }
+
+  const { error } = await db
+    .from("study_goals")
+    .insert({
+      user_name: currentUser,
+      category: category,
+      goal_name: goalName,
+      mon: "",
+      tue: "",
+      wed: "",
+      thu: "",
+      fri: "",
+      sat: "",
+      sun: "",
+      target_count: target
+    });
+
+  if (error) {
+    alert("목표 추가 실패: " + error.message);
+    return;
+  }
 
   document.getElementById("categoryInput").value = "";
   document.getElementById("goalInput").value = "";
+  document.getElementById("targetInput").value = "3";
+
+  await loadAll();
 }
 
-function toggleCheck(index,day){
+async function toggleCheck(id, day) {
+  const goal = goals.find(item => item.id === id);
+  if (!goal) return;
 
-  const checks =
-    state.data[currentUser].goals[index].checks;
+  const current = goal[day] || "";
+  const next = current === "" ? "O" : current === "O" ? "X" : "";
 
-  const current = checks[day];
+  const updateData = {};
+  updateData[day] = next;
 
-  if(current === ""){
-    checks[day] = "O";
+  const { error } = await db
+    .from("study_goals")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) {
+    alert("체크 저장 실패: " + error.message);
+    return;
   }
-  else if(current === "O"){
-    checks[day] = "X";
+
+  await loadAll();
+}
+
+async function deleteGoal(id) {
+  if (!confirm("이 목표를 삭제할까?")) return;
+
+  const { error } = await db
+    .from("study_goals")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("삭제 실패: " + error.message);
+    return;
   }
-  else{
-    checks[day] = "";
-  }
 
-  saveState();
-
-  render();
+  await loadAll();
 }
 
-function deleteGoal(index){
-
-  state.data[currentUser].goals.splice(index,1);
-
-  saveState();
-
-  render();
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
 }
-
-function resetCurrentUser(){
-
-  state.data[currentUser] = {
-    monthGoal:"",
-    goals:[]
-  };
-
-  saveState();
-
-  render();
-}
-
-render();
