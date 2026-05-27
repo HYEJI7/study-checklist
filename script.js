@@ -3,7 +3,7 @@ const SUPABASE_URL = "https://ytlgamkgqsmswsbawndp.supabase.co";
 const SUPABASE_KEY = "sb_publishable_CadAafBrDt9m4E4umtZY3Q_QBgg1E0N";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const users = ["혜지", "민영", "지은"];
+const users = ["혜지", "도윤", "선영"];
 const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 let currentUser = users[0];
