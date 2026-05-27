@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "study-checklist-v2";
 
-const users = ["혜지", "민영", "지은"];
+const users = ["혜지", "도윤", "선영"];
 
 const days = ["mon","tue","wed","thu","fri","sat","sun"];
 
